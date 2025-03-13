@@ -1,0 +1,13 @@
+{
+	"useTabs": true,
+	"tabWidth": 4,
+	"printWidth": 80,
+	"semi": false,
+	"singleQuote": false,
+	"trailingComma": "none",
+	"bracketSpacing": true,
+	"objectWrap": "collapse",
+	"arrowParens": "always",
+	"endOfLine": "lf",
+	"singleAttributePerLine": false
+}
