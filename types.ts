@@ -26,3 +26,8 @@ type LeaderboardEntry = {
 type Leaderboard = {
 	entries: LeaderboardEntry[];
 };
+
+type auth = {
+	username: string;
+	token: string;
+};

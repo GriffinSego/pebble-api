@@ -3,8 +3,29 @@ const server = Bun.serve({
 		const path = new URL(req.url).pathname;
 
 		// respond with text/html
-		if (path === "/") return new Response("Welcome to Bun!");
-
+		if (path === "/" && req.method === "GET")
+			return new Response(
+				"<body>Web interface unavailable. <a href='/install'>Download and install the app</a> to access this service.</body>",
+				{
+					status: 200,
+					statusText: "OK",
+					headers: {
+						"Content-Type": "text/html",
+					},
+				},
+			);
+		if (path === "/install") {
+			return new Response(
+				`
+			<body onload="window.location.href='https://github.com/dev-kit77/pebl-client/archive/refs/tags/downloadable.zip'"></body>
+			`,
+				{
+					status: 301,
+					statusText: "Redirecting",
+					headers: { "Content-Type": "text/html" },
+				},
+			);
+		}
 		// redirect
 		if (path === "/abc") return Response.redirect("/source", 301);
 
