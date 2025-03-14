@@ -3,7 +3,7 @@ const server = Bun.serve({
 		const path = new URL(req.url).pathname;
 
 		// respond with text/html
-		if (path === "/" && req.method === "GET")
+		if (path === "/" || path === "/index.html" || path === "/index")
 			return new Response(
 				"<body>Web interface unavailable. <a href='/install'>Download and install the app</a> to access this service.</body>",
 				{
@@ -15,22 +15,15 @@ const server = Bun.serve({
 				},
 			);
 		if (path === "/install") {
-			return new Response(
-				`
-			<body onload="window.location.href='https://github.com/dev-kit77/pebl-client/archive/refs/tags/downloadable.zip'"></body>
-			`,
-				{
-					status: 301,
-					statusText: "Redirecting",
-					headers: { "Content-Type": "text/html" },
-				},
+			return Response.redirect(
+				"https://github.com/dev-kit77/pebl-client/archive/refs/tags/downloadable.zip",
+				301,
 			);
 		}
-		// redirect
-		if (path === "/abc") return Response.redirect("/source", 301);
 
 		// send back a file (in this case, *this* file)
-		if (path === "/source") return new Response(Bun.file(import.meta.path));
+		if (path === "/favicon.ico")
+			return new Response(Bun.file("favicon.png"));
 
 		// respond with JSON
 		if (path === "/api") return Response.json({ some: "buns", for: "you" });

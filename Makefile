@@ -9,4 +9,4 @@ deploy:
 	git commit -m "Automatic deployment"
 	git push
 
-.PHONY: dev prod
+.PHONY: dev prod deploy
