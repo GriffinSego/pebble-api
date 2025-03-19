@@ -1,7 +1,14 @@
 // import * as user from "./user"
 
 export async function handle(path: string, req: Request): Promise<Response> {
-	const body = await req.json()
+	console.log("handling request: " + path)
+	const body = await req.text()
+	let jsonBody
+	try {
+		jsonBody = JSON.parse(body)
+	} catch (error) {
+		jsonBody = false
+	}
 	const rm = req.method
 	const rmg = rm === "GET"
 	const rmput = rm === "PUT"
