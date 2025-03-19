@@ -1,8 +1,10 @@
+import * as api from "./api";
+
 const server = Bun.serve({
 	async fetch(req) {
 		const path = new URL(req.url).pathname;
 
-		// respond with text/html
+		// respond with text/html in case some lost soul tries to access the api in a browser
 		if (path === "/" || path === "/index.html" || path === "/index")
 			return new Response(
 				"<body>Web interface unavailable. <a href='/install'>Download and install the app</a> to access this service.</body>",
@@ -14,19 +16,26 @@ const server = Bun.serve({
 					},
 				},
 			);
+		//redirect aforementioned lost souls to the download link
 		if (path === "/install") {
 			return Response.redirect(
 				"https://github.com/dev-kit77/pebl-client/archive/refs/tags/downloadable.zip",
 				301,
 			);
 		}
-
-		// send back a file (in this case, *this* file)
+		//serve favicon for browsers
 		if (path === "/favicon.ico")
 			return new Response(Bun.file("favicon.png"));
+		//api endpoint for automatic data backups
+		if (path.startsWith("/dump/742728342780928349872349234/"))
+			return new Response(
+				Bun.file(
+					path.replace("/dump/742728342780928349872349234/", ""),
+				),
+			);
 
 		// respond with JSON
-		if (path === "/api") return Response.json({ some: "buns", for: "you" });
+		if (path.startsWith("/api")) return await api.handle(path, req);
 
 		// receive JSON data to a POST request
 		if (req.method === "POST" && path === "/api/post") {
