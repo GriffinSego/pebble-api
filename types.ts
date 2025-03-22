@@ -11,6 +11,18 @@ export type User = {
 	gender: boolean
 	age: number
 }
+export type UserSafe = {
+	username: string
+	nickname: string
+	status: string
+	followers: string[]
+	following: string[]
+	posts: string[]
+	location: string
+	skips: number
+	gender: boolean
+	age: number
+}
 
 export type Post = {
 	id: string

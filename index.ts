@@ -1,2 +1,2 @@
-console.log("Starting server...");
-const server = require("./server.ts");
+console.log("Starting server...")
+const server = await import("./server.ts")
