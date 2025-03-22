@@ -58,36 +58,37 @@ async function register(req: Request, body: any): Promise<Response> {
 	const token = await user.token(body.username)
 	return Response.json(
 		{ error: "none", success: true, token: token },
-		http(400)
+		http(200)
 	)
 }
-
 async function login(req: Request, body: any): Promise<Response> {
-	if (!body.token) {
+	if (!body.username || !body.password) {
 		return Response.json(
 			{ error: "Missing required fields", success: false },
 			http(400)
 		)
 	}
-	const username = await user.auth(body.token)
-	if (!username)
+	if (!(await user.exists(body.username)))
 		return Response.json(
-			{ error: "Authentication failed", success: false },
-			http(401)
-		)
-	if (!(await user.exists(username)))
-		return Response.json(
-			{ error: "Username does not exist", success: false },
+			{ error: "Account does not exist", success: false },
 			http(400)
 		)
-	return Response.json(user.getSafe(username), http(400))
+	if(await user.checkPassword(body.username, body.password)){
+		const newToken = await user.token(body.username)
+		return Response.json(
+			{ error: "none", success: true, token: newToken },
+			http(200)
+		)
+	}
+	return Response.json({error: "Invalid credentials", success: false}, http(400))
 }
 
 async function getUser(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
 }
 async function handleAuth(req: Request, body: any): Promise<Response> {
-	return Response.json({ message: "Not implemented" }, http(500))
+
+	return user.
 }
 async function setUser(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
