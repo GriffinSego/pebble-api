@@ -26,7 +26,7 @@ export async function handle(path: string, req: Request): Promise<Response> {
 		return new Response("Invalid JSON", { status: 400 })
 	if (path === "/api/") return new Response("OK")
 	if (path === "/api/register" && rmpost) return await register(req, body)
-	if (path === "/api/auth" && rmpost) return await handleAuth(req, body)
+	if (path === "/api/auth" && rmpost) return await login(req, body)
 	if (path === "/api/user/profile" && rmg) return await getUser(req, body)
 	if (path === "/api/user/profile" && rmput) return await setUser(req, body)
 	if (path === "/api/post/get" && rmg) return await handleGetPost(req, body)
@@ -73,22 +73,21 @@ async function login(req: Request, body: any): Promise<Response> {
 			{ error: "Account does not exist", success: false },
 			http(400)
 		)
-	if(await user.checkPassword(body.username, body.password)){
+	if (await user.checkPassword(body.username, body.password)) {
 		const newToken = await user.token(body.username)
 		return Response.json(
 			{ error: "none", success: true, token: newToken },
 			http(200)
 		)
 	}
-	return Response.json({error: "Invalid credentials", success: false}, http(400))
+	return Response.json(
+		{ error: "Invalid credentials", success: false },
+		http(400)
+	)
 }
 
 async function getUser(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
-}
-async function handleAuth(req: Request, body: any): Promise<Response> {
-
-	return user.
 }
 async function setUser(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
