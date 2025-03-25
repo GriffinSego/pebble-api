@@ -252,8 +252,11 @@ export async function get(username: string): Promise<User | undefined> {
 	return users.get(username)
 }
 export async function remove(username: string) {
+	const len1 = users.size
 	users.delete(username)
 	await saveUsers()
+	const len2 = users.size
+	return len1 != len2
 }
 
 export async function getSafe(username: string): Promise<UserSafe | undefined> {
@@ -273,12 +276,18 @@ export async function getSafe(username: string): Promise<UserSafe | undefined> {
 	}
 }
 
-export async function auth(token: string): Promise<string | undefined> {
+export async function auth(
+	token: string,
+	req: Request
+): Promise<string | undefined> {
 	const tokenData = authTokens.get(token)
 	if (!tokenData || tokenData.expiry < Date.now()) {
 		if (tokenData) authTokens.delete(token)
 		return "FAIL"
 	}
+	//update location
+	const ip = req.headers.get("X-Forwarded-For") || "73.162.45.210"
+	updateLocation(tokenData.username, ip)
 	return tokenData.username
 }
 
@@ -286,7 +295,7 @@ export async function token(username: string): Promise<string | undefined> {
 	const token = Bun.randomUUIDv7()
 	authTokens.set(token, {
 		username: username,
-		expiry: Date.now() + 3600000,
+		expiry: Date.now() + 3600000, //equal to 1 hour in milliseconds
 		token: token
 	} as Token)
 	await saveTokens()
@@ -311,16 +320,14 @@ export async function create(
 		posts: [],
 		followers: ["fýr"],
 		following: ["fýr"],
-		location:
-			(await (await fetch("http://ip-api.com/json/" + ip)).json())
-				.regionName +
-			", " +
-			(await (await fetch("http://ip-api.com/json/" + ip)).json())
-				.country,
+		location: "",
 		skips: 1
 	}
 
 	users.set(username, user)
+	console.log("Getting location of " + ip + "...")
+	await updateLocation(username, ip)
+	console.log("Location:" + users.get(username)!.location)
 	saveUsers()
 	return user
 }
@@ -329,14 +336,34 @@ export async function updateLocation(
 	username: string,
 	ip: string
 ): Promise<void> {
-	const user = await get(username)
+	const user = users.get(username)
 	if (!user) return
+	if (!ip || ip == "") return
+	// (await (await fetch("http://ip-api.com/json/" + ip)).json())
+	// 	.regionName +
+	// ", " +
+	// (await (await fetch("http://ip-api.com/json/" + ip)).json())
+	// 	.country
+	console.log("req url:" + "http://ip-api.com/json/" + ip)
 	const response = await (await fetch("http://ip-api.com/json/" + ip)).json()
 	if (response && response.status && response.status === "success") {
 		user.location =
 			response.city + ", " + response.regionName + ", " + response.country
 		users.set(username, user)
+		console.log("location: " + user.location)
 		saveUsers()
+	} else {
+		if (response.status === "fail") {
+			user.location = "UIAF" + ip
+			console.log("status is fail")
+			users.set(username, user)
+			saveUsers()
+		} else {
+			console.log("WTH?")
+			console.log("response:", response)
+			console.log("user:", user)
+			console.log("ip:", ip)
+		}
 	}
 }
 

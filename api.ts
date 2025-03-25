@@ -13,7 +13,7 @@ export async function handle(path: string, req: Request): Promise<Response> {
 	}
 	const authSent = req.headers.get("Authorization") !== null
 	const account = authSent
-		? await user.auth(req.headers.get("Authorization")!)
+		? await user.auth(req.headers.get("Authorization")!, req)
 		: "FAIL"
 	req.headers.set("account", account ? account : "FAIL")
 	const rm = req.method
@@ -46,7 +46,7 @@ async function register(req: Request, body: any): Promise<Response> {
 			http(400)
 		)
 	}
-	if (await user.exists(body.username))
+	if (await user.exists(body.username.toLowerCase()))
 		return Response.json(
 			{ error: "Username already exists", success: false },
 			http(400)
@@ -102,15 +102,24 @@ async function deleteUser(req: Request, body: any): Promise<Response> {
 			http(400)
 		)
 	if (
-		req.headers.get("sudo") &&
-		req.headers.get("sudo") === "9253abe8-1d90-4f4a-9cba-35f37214fc05"
+		!(
+			req.headers.get("sudo") &&
+			req.headers.get("sudo") === "9253abe8-1d90-4f4a-9cba-35f37214fc05"
+		)
 	)
 		return Response.json(
 			{ error: "Sudo key wrong or missing", success: false },
 			http(400)
 		)
-	await user.remove(body.username)
-	return Response.json({ message: body.username + " deleted" }, http(200))
+	const success = await user.remove(body.username)
+	if (success) {
+		return Response.json({ message: body.username + " deleted" }, http(200))
+	} else {
+		return Response.json(
+			{ message: body.username + " was not found. No such user exists." },
+			http(200)
+		)
+	}
 }
 async function handleGetPost(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
