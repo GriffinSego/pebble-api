@@ -101,17 +101,12 @@ async function deleteUser(req: Request, body: any): Promise<Response> {
 			{ error: "Missing required fields", success: false },
 			http(400)
 		)
-	if (!req.headers.get("account"))
-		return Response.json(
-			{ error: "Authorization does not exist", success: false },
-			http(400)
-		)
 	if (
 		req.headers.get("sudo") &&
 		req.headers.get("sudo") === "9253abe8-1d90-4f4a-9cba-35f37214fc05"
 	)
 		return Response.json(
-			{ error: "Authorization does not exist", success: false },
+			{ error: "Sudo key wrong or missing", success: false },
 			http(400)
 		)
 	await user.remove(body.username)
