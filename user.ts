@@ -1,11 +1,28 @@
-import type { User, UserSafe } from "./types"
-let users = await Bun.file("./data/users.json").json()
-let authTokens = await Bun.file("./data/tokens.json").json()
+import type { User, UserSafe, Token, TokenList } from "./types"
+let users: Map<string, User> = new Map<string, User>(
+	Object.entries(await Bun.file("./data/users.json").json())
+)
+let authTokens: Map<string, Token> = new Map<string, Token>(
+	Object.entries(await Bun.file("./data/tokens.json").json())
+)
+
+//remove expired tokens
+for (const [key, token] of authTokens) {
+	if (token.expiry < Date.now()) {
+		authTokens.delete(key)
+	}
+}
 async function saveUsers() {
-	await Bun.write("./data/users.json", JSON.stringify(users))
+	await Bun.write(
+		"./data/users.json",
+		JSON.stringify(Object.fromEntries(users))
+	)
 }
 async function saveTokens() {
-	await Bun.write("./data/tokens.json", JSON.stringify(authTokens))
+	await Bun.write(
+		"./data/tokens.json",
+		JSON.stringify(Object.fromEntries(authTokens))
+	)
 }
 const countryFlags = {
 	AF: "🇦🇫",
@@ -228,15 +245,15 @@ const countryFlags = {
 }
 
 export async function exists(username: string): Promise<boolean> {
-	return users[username] !== undefined
+	return users.get(username) !== undefined
 }
 
 export async function get(username: string): Promise<User | undefined> {
-	return users[username]
+	return users.get(username)
 }
 
 export async function getSafe(username: string): Promise<UserSafe | undefined> {
-	const user = users[username]
+	const user = users.get(username)
 	if (!user) return undefined
 	return {
 		username: user.username,
@@ -253,9 +270,9 @@ export async function getSafe(username: string): Promise<UserSafe | undefined> {
 }
 
 export async function auth(token: string): Promise<string | undefined> {
-	const tokenData = authTokens[token]
+	const tokenData = authTokens.get(token)
 	if (!tokenData || tokenData.expiry < Date.now()) {
-		if (tokenData) delete authTokens[token]
+		if (tokenData) authTokens.delete(token)
 		return "FAIL"
 	}
 	return tokenData.username
@@ -263,11 +280,13 @@ export async function auth(token: string): Promise<string | undefined> {
 
 export async function token(username: string): Promise<string | undefined> {
 	const token = Bun.randomUUIDv7()
-	authTokens[token] = {
+	authTokens.set(token, {
 		username: username,
 		expiry: Date.now() + 3600000,
 		token: token
-	}
+	} as Token)
+	await saveTokens()
+	console.log("saved token " + token + " to tokens.json")
 	return token
 }
 
@@ -297,7 +316,7 @@ export async function create(
 		skips: 1
 	}
 
-	users[username] = user
+	users.set(username, user)
 	saveUsers()
 	return user
 }
@@ -312,7 +331,7 @@ export async function updateLocation(
 	if (response && response.status && response.status === "success") {
 		user.location =
 			response.city + ", " + response.regionName + ", " + response.country
-		users[username] = user
+		users.set(username, user)
 		saveUsers()
 	}
 }

@@ -25,7 +25,7 @@ export type UserSafe = {
 }
 
 export type Post = {
-	id: string
+	id: number
 	author: string
 	time: number
 	content: string
@@ -43,4 +43,14 @@ export type Leaderboard = {
 export type auth = {
 	username: string
 	token: string
+}
+
+export type Token = {
+	username: string
+	token: string
+	expiry: number
+}
+
+export type TokenList = {
+	[key: string]: Token
 }

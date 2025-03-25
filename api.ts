@@ -1,8 +1,9 @@
 import * as user from "./user"
+import * as post from "./post"
 
 export async function handle(path: string, req: Request): Promise<Response> {
 	console.log("handling request: " + path)
-	let body = await req.text()
+	let body: any = await req.text()
 	let jsonBody
 	try {
 		jsonBody = JSON.parse(body)
@@ -14,6 +15,7 @@ export async function handle(path: string, req: Request): Promise<Response> {
 	const account = authSent
 		? await user.auth(req.headers.get("Authorization")!)
 		: "FAIL"
+	req.headers.set("account", account ? account : "FAIL")
 	const rm = req.method
 	const rmg = rm === "GET"
 	const rmput = rm === "PUT"
@@ -96,13 +98,25 @@ async function handleGetPost(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
 }
 async function createPost(req: Request, body: any): Promise<Response> {
-	return Response.json({ message: "Not implemented" }, http(500))
+	if (!body.content)
+		return Response.json(
+			{ error: "Missing required fields", success: false },
+			http(400)
+		)
+	if (req.headers.get("account") == "FAIL")
+		return Response.json(
+			{ error: "Account does not exist", success: false },
+			http(400)
+		)
+	const newPost = await post.createPost(body.content, body.author)
+	return Response.json({ id: newPost.id }, http(200))
 }
 async function handleGetPosts(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
 }
 async function handleFeed(req: Request, body: any): Promise<Response> {
-	return Response.json({ message: "Not implemented" }, http(500))
+	const feed = await post.getFeed()
+	return Response.json({ feed }, http(200))
 }
 async function leaderboard(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
