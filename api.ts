@@ -31,6 +31,7 @@ export async function handle(path: string, req: Request): Promise<Response> {
 	if (path === "/api/auth" && rmpost) return await login(req, body)
 	if (path === "/api/user/profile" && rmg) return await getUser(req, body)
 	if (path === "/api/user/profile" && rmput) return await setUser(req, body)
+	if (path === "/api/user/delete" && rmput) return await deleteUser(req, body)
 	if (path === "/api/post/get" && rmg) return await handleGetPost(req, body)
 	if (path === "/api/post/create" && rmput) return await createPost(req, body)
 	if (path === "/api/feed" && rmg) return await handleFeed(req, body)
@@ -51,7 +52,7 @@ async function register(req: Request, body: any): Promise<Response> {
 			http(400)
 		)
 	const newAccount = await user.create(
-		body.username,
+		body.username.toLowerCase(),
 		body.password,
 		body.gender,
 		body.age,
@@ -93,6 +94,28 @@ async function getUser(req: Request, body: any): Promise<Response> {
 }
 async function setUser(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))
+}
+async function deleteUser(req: Request, body: any): Promise<Response> {
+	if (!body.username)
+		return Response.json(
+			{ error: "Missing required fields", success: false },
+			http(400)
+		)
+	if (!req.headers.get("account"))
+		return Response.json(
+			{ error: "Authorization does not exist", success: false },
+			http(400)
+		)
+	if (
+		req.headers.get("sudo") &&
+		req.headers.get("sudo") === "9253abe8-1d90-4f4a-9cba-35f37214fc05"
+	)
+		return Response.json(
+			{ error: "Authorization does not exist", success: false },
+			http(400)
+		)
+	await user.remove(body.username)
+	return Response.json({ message: body.username + " deleted" }, http(200))
 }
 async function handleGetPost(req: Request, body: any): Promise<Response> {
 	return Response.json({ message: "Not implemented" }, http(500))

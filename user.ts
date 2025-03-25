@@ -251,6 +251,10 @@ export async function exists(username: string): Promise<boolean> {
 export async function get(username: string): Promise<User | undefined> {
 	return users.get(username)
 }
+export async function remove(username: string) {
+	users.delete(username)
+	await saveUsers()
+}
 
 export async function getSafe(username: string): Promise<UserSafe | undefined> {
 	const user = users.get(username)
