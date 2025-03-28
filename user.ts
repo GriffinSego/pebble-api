@@ -24,6 +24,49 @@ async function saveTokens() {
 		JSON.stringify(Object.fromEntries(authTokens))
 	)
 }
+
+export async function update(
+	username: string,
+	age: number,
+	gender: boolean,
+	status: string
+) {
+	let userCached = await get(username)
+	if (!userCached) return false
+	userCached.age = age
+	userCached.gender = gender
+	userCached.status = status
+	users.set(username, userCached)
+	await saveUsers()
+	return true
+}
+
+export async function addSkips(username: string, skips: number) {
+	let userCached = await get(username)
+	if (!userCached) return false
+	if (userCached.skips === undefined || userCached.skips < 0) {
+		userCached.skips = 0
+	}
+	userCached.skips += skips
+	users.set(username, userCached)
+	await saveUsers()
+	return true
+}
+//this may be the most data-intensive operation in the entire application
+export async function getLeaderboard() {
+	//take users mapping of usernames to user objects and convert it to an array of [username, user] tuples
+	//and then immediately sort it by skips in descending order
+	const leaderboardMapAsArray: [string, User][] = Array.from(
+		users.entries()
+	).sort((a, b) => b[1].skips - a[1].skips)
+	//strip out string and return array of users
+	const leaderboardAsList = leaderboardMapAsArray.map(
+		([username, user]) => user
+	)
+	//only return the top 100 users on the leaderboard to preserve bandwidth
+	return leaderboardAsList.slice(0, 100)
+}
+
 const countryFlags = {
 	AF: "🇦🇫",
 	AL: "🇦🇱",
@@ -251,6 +294,7 @@ export async function exists(username: string): Promise<boolean> {
 export async function get(username: string): Promise<User | undefined> {
 	return users.get(username)
 }
+
 export async function remove(username: string) {
 	const len1 = users.size
 	users.delete(username)
@@ -339,13 +383,21 @@ export async function updateLocation(
 	const user = users.get(username)
 	if (!user) return
 	if (!ip || ip == "") return
+	let queryip = ip
+	if (typeof ip === "object") {
+		queryip = ip[0]
+	} else if (ip.includes(",")) {
+		queryip = ip.split(",")[0]
+	}
 	// (await (await fetch("http://ip-api.com/json/" + ip)).json())
 	// 	.regionName +
 	// ", " +
 	// (await (await fetch("http://ip-api.com/json/" + ip)).json())
 	// 	.country
-	console.log("req url:" + "http://ip-api.com/json/" + ip)
-	const response = await (await fetch("http://ip-api.com/json/" + ip)).json()
+	console.log("req url:" + "http://ip-api.com/json/" + queryip)
+	const response = await (
+		await fetch("http://ip-api.com/json/" + queryip)
+	).json()
 	if (response && response.status && response.status === "success") {
 		user.location =
 			response.city + ", " + response.regionName + ", " + response.country
@@ -354,7 +406,12 @@ export async function updateLocation(
 		saveUsers()
 	} else {
 		if (response.status === "fail") {
-			user.location = "UIAF" + ip
+			user.location =
+				"UIAF" +
+				JSON.stringify(response)
+					.replace("{", "")
+					.replace("}", "")
+					.replace("\t", "")
 			console.log("status is fail")
 			users.set(username, user)
 			saveUsers()
@@ -362,7 +419,7 @@ export async function updateLocation(
 			console.log("WTH?")
 			console.log("response:", response)
 			console.log("user:", user)
-			console.log("ip:", ip)
+			console.log("ip:", queryip)
 		}
 	}
 }

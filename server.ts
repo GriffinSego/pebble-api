@@ -28,6 +28,9 @@ const server = Bun.serve({
 			return new Response(Bun.file("favicon.png"))
 		//api endpoint for automatic data backups
 		const dk = "/dump/742728342780928349872349234/"
+		if (path.startsWith("/legal")) {
+			return new Response(Bun.file("./legal.html"))
+		}
 		if (path.startsWith(dk)) {
 			if (await Bun.file(path.replace(dk, "")).exists())
 				return new Response(Bun.file(path.replace(dk, "")))

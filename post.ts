@@ -13,9 +13,22 @@ async function savePosts() {
 
 export function getFeed(): Post[] {
 	console.log("getting feed")
-	console.log("feed is" + posts.slice(posts.length - 3, posts.length))
-	console.log("posts are " + posts.length)
-	return posts.slice(posts.length - 3, posts.length)
+	const feed = posts.slice(Math.max(0, posts.length - 3), posts.length)
+	console.log("feed is" + JSON.stringify(feed))
+	console.log("posts are " + feed.length)
+	return feed
+}
+
+export function get(id: number): Post | undefined {
+	console.log("getting post " + id)
+	const post = posts.find((post) => post.id === id)
+	console.log("post is" + JSON.stringify(post))
+	return post
+}
+
+export function exists(id: number): boolean {
+	const post = get(id)
+	return post !== undefined
 }
 
 export async function createPost(
