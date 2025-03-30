@@ -1,9 +1,1 @@
-[
-	{
-		"id": 1,
-		"content": "who said this???",
-		"author": "bob2",
-		"likes": 0,
-		"time": 1743322928500
-	}
-]
+[{"id":1,"content":"who said this???","author":"bob2","likes":0,"time":1743322928500},{"id":2,"content":"who said this???","author":"bob2","likes":0,"time":1743325975467}]

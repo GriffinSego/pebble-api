@@ -102,7 +102,13 @@ async function getUser(req: Request, body: any): Promise<Response> {
 			http(404)
 		)
 	//get userdata
-	const userData = await user.getSafe(body.username)
+	const userData = await user.getSafe(req.headers.get("target")!)
+	if (!userData) {
+		return Response.json(
+			{ error: "Account safe parse failure", success: false },
+			http(500)
+		)
+	}
 	return Response.json(userData, http(200))
 }
 async function setUser(req: Request, body: any): Promise<Response> {
@@ -224,6 +230,7 @@ async function createPost(req: Request, body: any): Promise<Response> {
 		body.content,
 		req.headers.get("account")!
 	)
+	await user.addPost(req.headers.get("account")!, newPost.id)
 	user.addSkips(body.author, 1)
 	return Response.json({ id: newPost.id }, http(200))
 }

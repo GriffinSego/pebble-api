@@ -41,6 +41,18 @@ export async function update(
 	return true
 }
 
+export async function addPost(username: string, postid: number) {
+	let userCached = await get(username)
+	if (!userCached) throw new Error("User not found while adding post")
+	if (userCached.posts === undefined || userCached.posts.length === 0) {
+		userCached.posts = []
+	}
+	userCached.posts.push(postid.toString())
+	users.set(username, userCached)
+	await saveUsers()
+	return true
+}
+
 export async function addSkips(username: string, skips: number) {
 	let userCached = await get(username)
 	if (!userCached) return false
@@ -304,7 +316,10 @@ export async function remove(username: string) {
 }
 
 export async function getSafe(username: string): Promise<UserSafe | undefined> {
+	if (!username) throw new Error("Username is undefined")
+
 	const user = users.get(username)
+	console.log("User: ", user)
 	if (!user) return undefined
 	return {
 		username: user.username,
