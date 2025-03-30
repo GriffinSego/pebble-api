@@ -64,6 +64,22 @@ export async function addSkips(username: string, skips: number) {
 	await saveUsers()
 	return true
 }
+
+function makeSafe(user: User): UserSafe {
+	return {
+		username: user.username,
+		gender: user.gender,
+		age: user.age,
+		nickname: user.nickname,
+		status: user.status,
+		followers: user.followers,
+		following: user.following,
+		posts: user.posts,
+		location: user.location,
+		skips: user.skips
+	}
+}
+
 //this may be the most data-intensive operation in the entire application
 export async function getLeaderboard() {
 	//take users mapping of usernames to user objects and convert it to an array of [username, user] tuples
@@ -75,8 +91,10 @@ export async function getLeaderboard() {
 	const leaderboardAsList = leaderboardMapAsArray.map(
 		([username, user]) => user
 	)
+	//strip out non-public fields from user objects
+	const safeLeaderboard = leaderboardAsList.map((user) => makeSafe(user))
 	//only return the top 100 users on the leaderboard to preserve bandwidth
-	return leaderboardAsList.slice(0, 100)
+	return safeLeaderboard.slice(0, 100)
 }
 
 const countryFlags = {
