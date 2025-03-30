@@ -13,7 +13,7 @@ async function savePosts() {
 
 export function getFeed(): Post[] {
 	console.log("getting feed")
-	const feed = posts.slice(Math.max(0, posts.length - 3), posts.length)
+	const feed = posts.slice(Math.max(0, posts.length - 50), posts.length)
 	console.log("feed is" + JSON.stringify(feed))
 	console.log("posts are " + feed.length)
 	return feed
