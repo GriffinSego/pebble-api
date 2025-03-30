@@ -182,18 +182,18 @@ async function deleteUser(req: Request, body: any): Promise<Response> {
 	}
 }
 async function handleGetPost(req: Request, body: any): Promise<Response> {
-	if (!body.id) {
+	if (!req.headers.get("id")) {
 		return Response.json(
-			{ error: "Missing required fields", success: false },
+			{ error: "Missing required headers", success: false },
 			http(400)
 		)
 	}
 	let bodyid
 	try {
-		bodyid = parseInt(body.id)
+		bodyid = parseInt(req.headers.get("id")!)
 	} catch (error) {
 		return Response.json(
-			{ error: "ID is not a parseable number", success: false },
+			{ error: "ID header is not a parseable number", success: false },
 			http(400)
 		)
 	}
