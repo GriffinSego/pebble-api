@@ -220,7 +220,10 @@ async function createPost(req: Request, body: any): Promise<Response> {
 			{ error: "Account does not exist", success: false },
 			http(400)
 		)
-	const newPost = await post.createPost(body.content, body.author)
+	const newPost = await post.createPost(
+		body.content,
+		req.headers.get("account")!
+	)
 	user.addSkips(body.author, 1)
 	return Response.json({ id: newPost.id }, http(200))
 }

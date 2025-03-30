@@ -35,11 +35,12 @@ export async function createPost(
 	content: string,
 	author: string
 ): Promise<Post> {
+	if (!content || !author) throw new Error("Content and author are required")
 	const id = posts.length + 1
 	const post: Post = {
 		id: id,
-		content: content,
-		author: author,
+		content: content.toString(),
+		author: author.toString(),
 		likes: 0,
 		time: Date.now()
 	}
