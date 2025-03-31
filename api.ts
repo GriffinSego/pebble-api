@@ -31,6 +31,8 @@ export async function handle(path: string, req: Request): Promise<Response> {
 	if (path === "/api/user/profile" && rmg) return await getUser(req, body) //done
 	if (path === "/api/auth" && rmpost) return await login(req, body) //done
 	if (path === "/api/user/profile" && rmput) return await setUser(req, body) //done
+	if (path === "/api/user/toggleFollow" && rmput)
+		return await followUser(req, body) //done
 	if (path === "/api/user/delete" && rmput) return await deleteUser(req, body) //done
 	if (path === "/api/post/get" && rmg) return await handleGetPost(req, body) //done
 	if (path === "/api/post/create" && rmput) return await createPost(req, body) //done
@@ -312,10 +314,38 @@ async function skipPost(req: Request, body: any): Promise<Response> {
 	}
 	//add the skip to the post and subtract from the user
 	await post.addSkips(body.id, 1)
-	const remainingSkips = await user.addSkips(req.headers.get("account")!, -1)
-	await user.addSkips(postAuthor, 1)
+	const remainingSkips = user.addSkips(req.headers.get("account")!, -1)
+	user.addSkips(postAuthor, 1)
 
 	return Response.json({ skips: remainingSkips }, http(200))
+}
+
+async function followUser(req: Request, body: any): Promise<Response> {
+	if (!body.target) {
+		return Response.json(
+			{ error: "Missing target field", success: false },
+			http(400)
+		)
+	}
+	const target = body.target
+	if (!user.exists(target)) {
+		return Response.json(
+			{ error: "Target user does not exist", success: false },
+			http(404)
+		)
+	}
+	if (target === req.headers.get("account")) {
+		return Response.json(
+			{ error: "User cannot follow themselves", success: false },
+			http(403)
+		)
+	}
+	//check if the user is currently following the target
+	const succeess = await user.followToggle(
+		req.headers.get("account")!,
+		target
+	)
+	return Response.json({ success: succeess }, http(200))
 }
 
 export function http(code: number) {

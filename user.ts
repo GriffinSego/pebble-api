@@ -73,6 +73,42 @@ export async function hasSkips(username: string): Promise<boolean> {
 	return true
 }
 
+export async function followToggle(
+	user: string,
+	target: string
+): Promise<boolean> {
+	let userCached = await get(user)
+	let targetCached = await get(target)
+	if (!userCached) return false
+	if (!targetCached) return false
+	if (
+		userCached.following === undefined ||
+		userCached.following.length === 0
+	) {
+		userCached.following = []
+	}
+	if (
+		targetCached.followers === undefined ||
+		targetCached.followers.length === 0
+	) {
+		targetCached.followers = []
+	}
+	//check if currently following
+	if (userCached.following.includes(target)) {
+		userCached.following = userCached.following.filter((f) => f !== target)
+		targetCached.followers = targetCached.followers.filter(
+			(f) => f !== user
+		)
+	} else {
+		userCached.following.push(target)
+		targetCached.followers.push(user)
+	}
+	users.set(user, userCached)
+	users.set(target, targetCached)
+	await saveUsers()
+	return true
+}
+
 function makeSafe(user: User): UserSafe {
 	return {
 		username: user.username,
