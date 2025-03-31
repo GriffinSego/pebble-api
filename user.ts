@@ -57,13 +57,16 @@ export async function addSkips(
 	username: string,
 	skips: number
 ): Promise<number> {
+	console.log("adding " + skips + " skips to " + username)
 	let userCached = await get(username)
-	if (!userCached) return -1
-	if (userCached.skips === undefined || userCached.skips < 0) {
+	if (!userCached) throw new Error("User not found while adding skips")
+	if (userCached.skips === undefined) {
 		userCached.skips = 0
 	}
+	console.log("skips:" + userCached.skips)
 	userCached.skips += skips
 	users.set(username, userCached)
+	console.log("new skips:" + userCached.skips)
 	await saveUsers()
 	return userCached.skips
 }

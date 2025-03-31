@@ -11,6 +11,7 @@ export async function handle(path: string, req: Request): Promise<Response> {
 	} catch (error) {
 		jsonBody = false
 	}
+	req.headers.set("account", "FAIL") //to prevent user-set headers from interfering with auth
 	const authSent = req.headers.get("Authorization") !== null
 	const account = authSent
 		? await user.auth(req.headers.get("Authorization")!, req)
@@ -250,7 +251,7 @@ async function createPost(req: Request, body: any): Promise<Response> {
 		req.headers.get("account")!
 	)
 	await user.addPost(req.headers.get("account")!, newPost.id)
-	user.addSkips(body.author, 1)
+	user.addSkips(req.headers.get("account")!, 1)
 	return Response.json({ id: newPost.id }, http(200))
 }
 async function handleGetPosts(req: Request, body: any): Promise<Response> {
@@ -330,8 +331,8 @@ async function skipPost(req: Request, body: any): Promise<Response> {
 	}
 	//add the skip to the post and subtract from the user
 	await post.addSkips(body.id, 1)
-	const remainingSkips = user.addSkips(req.headers.get("account")!, -1)
-	user.addSkips(postAuthor, 1)
+	const remainingSkips = await user.addSkips(req.headers.get("account")!, -1)
+	await user.addSkips(postAuthor, 1)
 
 	return Response.json({ skips: remainingSkips }, http(200))
 }
