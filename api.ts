@@ -28,9 +28,14 @@ export async function handle(path: string, req: Request): Promise<Response> {
 		return new Response("Invalid JSON", { status: 400 })
 	if (path === "/api/") return new Response("OK") //done
 	if (path === "/api/register" && rmpost) return await register(req, body) //done
-	if (path === "/api/user/profile" && rmg) return await getUser(req, body) //done
 	if (path === "/api/auth" && rmpost) return await login(req, body) //done
+	if (path === "/api/user/profile" && rmpost) return await getUser(req, body) //done
 	if (path === "/api/user/profile" && rmput) return await setUser(req, body) //done
+	if (path === "/api/user/profile" && rmg)
+		return Response.json(
+			{ error: "endpoint moved to POST /api/user/profile" },
+			http(301)
+		)
 	if (path === "/api/user/toggleFollow" && rmput)
 		return await followUser(req, body) //done
 	if (path === "/api/user/delete" && rmput) return await deleteUser(req, body) //done
@@ -43,7 +48,12 @@ export async function handle(path: string, req: Request): Promise<Response> {
 }
 
 async function register(req: Request, body: any): Promise<Response> {
-	if (!body.username || !body.password || !body.gender || !body.age) {
+	if (
+		!body.username ||
+		!body.password ||
+		body.gender === undefined ||
+		!body.age
+	) {
 		return Response.json(
 			{ error: "Missing required fields", success: false },
 			http(400)
@@ -93,19 +103,25 @@ async function login(req: Request, body: any): Promise<Response> {
 }
 
 async function getUser(req: Request, body: any): Promise<Response> {
-	if (!req.headers.get("target"))
+	if (!body.target)
 		return Response.json(
-			{ error: "Missing required target header", success: false },
+			{ error: "Missing required target body field", success: false },
 			http(400)
 		)
 	//check if the user exists
-	if (!(await user.exists(req.headers.get("target")!)))
+	if (!(await user.exists(body.target))) {
+		console.log("Account does not exist")
+		console.log("target is:" + body.target)
+		console.log("getuser target is " + (await user.getSafe(body.target)))
+		console.log("get target is " + (await user.get(body.target)))
 		return Response.json(
 			{ error: "Account does not exist", success: false },
 			http(404)
 		)
+	}
+	console.log("Account exists")
 	//get userdata
-	const userData = await user.getSafe(req.headers.get("target")!)
+	const userData = await user.getSafe(body.target)
 	if (!userData) {
 		return Response.json(
 			{ error: "Account safe parse failure", success: false },

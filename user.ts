@@ -53,7 +53,10 @@ export async function addPost(username: string, postid: number) {
 	return true
 }
 
-export async function addSkips(username: string, skips: number): number {
+export async function addSkips(
+	username: string,
+	skips: number
+): Promise<number> {
 	let userCached = await get(username)
 	if (!userCached) return -1
 	if (userCached.skips === undefined || userCached.skips < 0) {
