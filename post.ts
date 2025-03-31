@@ -26,6 +26,18 @@ export function get(id: number): Post | undefined {
 	return post
 }
 
+export async function addSkips(id: number, skips: number): Promise<void> {
+	let post = posts.find((post) => post.id === id)
+	if (!post) return
+	post.likes += skips
+	//replace the old post entry with the updated one
+	const index = posts.findIndex((post) => post.id === id)
+	if (index !== -1) {
+		posts[index] = post
+	}
+	await savePosts()
+}
+
 export function exists(id: number): boolean {
 	const post = get(id)
 	return post !== undefined

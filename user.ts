@@ -53,15 +53,23 @@ export async function addPost(username: string, postid: number) {
 	return true
 }
 
-export async function addSkips(username: string, skips: number) {
+export async function addSkips(username: string, skips: number): number {
 	let userCached = await get(username)
-	if (!userCached) return false
+	if (!userCached) return -1
 	if (userCached.skips === undefined || userCached.skips < 0) {
 		userCached.skips = 0
 	}
 	userCached.skips += skips
 	users.set(username, userCached)
 	await saveUsers()
+	return userCached.skips
+}
+export async function hasSkips(username: string): Promise<boolean> {
+	let userCached = await get(username)
+	if (!userCached) return false
+	if (userCached.skips === undefined || userCached.skips < 1) {
+		return false
+	}
 	return true
 }
 

@@ -34,6 +34,7 @@ export async function handle(path: string, req: Request): Promise<Response> {
 	if (path === "/api/user/delete" && rmput) return await deleteUser(req, body) //done
 	if (path === "/api/post/get" && rmg) return await handleGetPost(req, body) //done
 	if (path === "/api/post/create" && rmput) return await createPost(req, body) //done
+	if (path === "/api/post/skip" && rmput) return await skipPost(req, body) //done
 	if (path === "/api/feed" && rmg) return await handleFeed(req, body) //done
 	if (path === "/api/leaderboard" && rmg) return await leaderboard(req, body) //done
 	return new Response("No such endpoint exists", { status: 404 })
@@ -250,6 +251,71 @@ async function leaderboard(req: Request, body: any): Promise<Response> {
 		)
 	}
 	return Response.json(await user.getLeaderboard(), http(200))
+}
+
+async function skipPost(req: Request, body: any): Promise<Response> {
+	if (!body.id) {
+		return Response.json(
+			{ error: "Missing id field", success: false },
+			http(400)
+		)
+	}
+	body.id = Number(body.id)
+	if (isNaN(body.id)) {
+		return Response.json(
+			{
+				error: "id was sent as string, but expected number",
+				success: false
+			},
+			http(400)
+		)
+	}
+	console.log("bodyid is " + body.id)
+	//confirm post exists
+	if (!post.exists(body.id)) {
+		return Response.json(
+			{ error: "Post does not exist", success: false },
+			http(404)
+		)
+	}
+	if (!req.headers.get("account")) {
+		return Response.json(
+			{
+				error: "User authorization was handled incorrectly on inbound request",
+				success: false
+			},
+			http(500)
+		)
+	}
+	//confirm user has at least 1 skip to spend
+	if (!(await user.hasSkips(req.headers.get("account")!))) {
+		return Response.json(
+			{ error: "User does not have enough skips", success: false },
+			http(403)
+		)
+	}
+	//ensure that the post was not made by the user
+	if (post.get(body.id)?.author === req.headers.get("account")) {
+		return Response.json(
+			{ error: "User cannot skip their own post", success: false },
+			http(403)
+		)
+	}
+
+	//add the skip to the post author
+	const postAuthor = post.get(body.id)?.author
+	if (!postAuthor) {
+		return Response.json(
+			{ error: "Post author not found", success: false },
+			http(404)
+		)
+	}
+	//add the skip to the post and subtract from the user
+	await post.addSkips(body.id, 1)
+	const remainingSkips = await user.addSkips(req.headers.get("account")!, -1)
+	await user.addSkips(postAuthor, 1)
+
+	return Response.json({ skips: remainingSkips }, http(200))
 }
 
 export function http(code: number) {
