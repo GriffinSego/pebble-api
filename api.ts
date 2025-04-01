@@ -79,6 +79,19 @@ async function register(req: Request, body: any): Promise<Response> {
 	)
 }
 async function login(req: Request, body: any): Promise<Response> {
+	// if (!req.headers.get("X-Forwarded-For")) {
+	// 	console.log("x-f-f:", req.headers.get("X-Forwarded-For"))
+	// 	console.log("rA:", req.remoteAddress)
+	// 	return Response.json(
+	// 		{
+	// 			error: "Missing X-Forwarded-For header. Unable to determine client IP.",
+	// 			success: false
+	// 		},
+	// 		http(400)
+	// 	)
+	// } else {
+	// 	console.log(req.headers.get("X-Forwarded-For"))
+	// }
 	if (!body.username || !body.password) {
 		return Response.json(
 			{ error: "Missing required fields", success: false },

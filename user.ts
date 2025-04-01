@@ -1,9 +1,10 @@
 import type { User, UserSafe, Token, TokenList } from "./types"
+import data from "./data"
 let users: Map<string, User> = new Map<string, User>(
-	Object.entries(await Bun.file("./data/users.json").json())
+	Object.entries(await data.users.get())
 )
 let authTokens: Map<string, Token> = new Map<string, Token>(
-	Object.entries(await Bun.file("./data/tokens.json").json())
+	Object.entries(await data.tokens.get())
 )
 
 //remove expired tokens
@@ -13,16 +14,10 @@ for (const [key, token] of authTokens) {
 	}
 }
 async function saveUsers() {
-	await Bun.write(
-		"./data/users.json",
-		JSON.stringify(Object.fromEntries(users))
-	)
+	await data.users.set(Object.fromEntries(users))
 }
 async function saveTokens() {
-	await Bun.write(
-		"./data/tokens.json",
-		JSON.stringify(Object.fromEntries(authTokens))
-	)
+	await data.tokens.set(Object.fromEntries(authTokens))
 }
 
 export async function update(
@@ -414,6 +409,11 @@ export async function auth(
 	}
 	//update location
 	const ip = req.headers.get("X-Forwarded-For") || "73.162.45.210"
+	// if (ip == "73.162.45.210") {
+	// 	throw new Error(
+	// 		`ip header fetch failed, x-f-f: ${req.headers.get("X-Forwarded-For")}`
+	// 	)
+	// }
 	updateLocation(tokenData.username, ip)
 	return tokenData.username
 }
@@ -463,9 +463,10 @@ export async function updateLocation(
 	username: string,
 	ip: string
 ): Promise<void> {
+	console.error("UPDATE LOCATION")
 	const user = users.get(username)
-	if (!user) return
-	if (!ip || ip == "") return
+	if (!user) throw new Error("no user??")
+	if (!ip || ip == "") throw new Error("no ip??")
 	let queryip = ip
 	if (typeof ip === "object") {
 		queryip = ip[0]

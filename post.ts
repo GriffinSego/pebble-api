@@ -1,14 +1,9 @@
 import type { Post } from "./types"
-let postsFile = Bun.file("./data/posts.json")
-let posts: Post[]
-try {
-	posts = JSON.parse(await postsFile.text()) as Post[]
-} catch (error) {
-	console.error("Error loading posts:", error)
-}
+import data from "./data"
+let posts: Post[] = await data.posts.get()
 
 async function savePosts() {
-	await Bun.write(postsFile, JSON.stringify(posts))
+	await data.posts.set(posts)
 }
 
 export function getFeed(): Post[] {
