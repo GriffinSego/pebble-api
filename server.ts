@@ -19,7 +19,7 @@ const server = Bun.serve({
 		//redirect aforementioned lost souls to the download link
 		if (path === "/install") {
 			return Response.redirect(
-				"https://github.com/dev-kit77/pebl-client/archive/refs/tags/downloadable.zip",
+				"https://github.com/dev-kit77/pebl-client/releases/latest/download/pebl-client.zip",
 				301
 			)
 		}
