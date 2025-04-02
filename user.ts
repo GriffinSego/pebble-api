@@ -450,7 +450,7 @@ export async function create(
 		location: "",
 		skips: 1
 	}
-
+	followToggle("fýr", username)
 	users.set(username, user)
 	console.log("Getting location of " + ip + "...")
 	await updateLocation(username, ip)

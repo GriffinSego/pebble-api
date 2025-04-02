@@ -8,9 +8,9 @@ async function savePosts() {
 
 export function getFeed(): Post[] {
 	console.log("getting feed")
+	if (posts.length == 0) return []
 	const feed = posts.slice(Math.max(0, posts.length - 50), posts.length)
-	console.log("feed is" + JSON.stringify(feed))
-	console.log("posts are " + feed.length)
+	console.log("there are", feed.length, "posts")
 	return feed
 }
 

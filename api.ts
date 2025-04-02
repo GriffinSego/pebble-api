@@ -1,5 +1,6 @@
 import * as user from "./user"
 import * as post from "./post"
+import * as util from "./util"
 
 export async function handle(path: string, req: Request): Promise<Response> {
 	console.log("handling request: " + path)
@@ -60,19 +61,37 @@ async function register(req: Request, body: any): Promise<Response> {
 			http(400)
 		)
 	}
-	if (await user.exists(body.username.toLowerCase()))
+	if (await user.exists(util.sanitize(body.username.toLowerCase()).value))
 		return Response.json(
 			{ error: "Username already exists", success: false },
 			http(400)
 		)
+	if (body.gender != "true" && body.gender != "false") {
+		return Response.json(
+			{ error: "Your gender is invalid", success: false },
+			http(400)
+		)
+	}
+	try {
+		parseInt(body.age)
+	} catch (err) {
+		return Response.json(
+			{ error: "Your age is invalid", success: false },
+			http(400)
+		)
+	}
+
 	const newAccount = await user.create(
-		body.username.toLowerCase(),
-		body.password,
-		body.gender,
-		body.age,
-		req.headers.get("x-forwarded-for") || ""
+		util.sanitize(body.username.toLowerCase()).value,
+		util.sanitize(body.password).value,
+		body.gender == "true",
+		parseInt(body.age),
+		req.headers.get("CF-Connecting-IP") ||
+			req.headers.get("X-Forwarded-Towards") ||
+			req.headers.get("X-Forwarded-For") ||
+			""
 	)
-	const token = await user.token(body.username)
+	const token = await user.token(newAccount.username)
 	return Response.json(
 		{ error: "none", success: true, token: token },
 		http(200)
@@ -181,7 +200,12 @@ async function setUser(req: Request, body: any): Promise<Response> {
 			http(404)
 		)
 	if (
-		await user.update(accountUsername, body.age, body.gender, body.status)
+		await user.update(
+			accountUsername,
+			body.age,
+			body.gender,
+			util.sanitize(body.status).value
+		)
 	) {
 		return Response.json(
 			{ message: "User updated successfully", success: true },
@@ -260,7 +284,7 @@ async function createPost(req: Request, body: any): Promise<Response> {
 			http(400)
 		)
 	const newPost = await post.createPost(
-		body.content,
+		util.sanitize(body.content).value,
 		req.headers.get("account")!
 	)
 	await user.addPost(req.headers.get("account")!, newPost.id)
