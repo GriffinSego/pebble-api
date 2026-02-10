@@ -65,9 +65,9 @@ export async function update(
 	await client.kv.namespaces.values.update(
 		process.env.CLOUDFLARE_NAMESPACE_ID!,
 		key,
+		JSON.stringify(stringifiableData),
 		{
 			account_id: process.env.CLOUDFLARE_ACCOUNT_ID!,
-			value: JSON.stringify(stringifiableData),
 			metadata: ""
 		}
 	)
