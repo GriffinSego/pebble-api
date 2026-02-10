@@ -19,7 +19,7 @@ export async function set(
 	if (cf) {
 		return await database.update(key, object)
 	} else {
-		await Bun.write(`./data/${key}.json`, JSON.stringify(key))
+		await Bun.write(`./data/${key}.json`, JSON.stringify(object))
 	}
 	return
 }

@@ -12,9 +12,7 @@ async function get(key: "users" | "posts" | "tokens") {
 	const response = await client.kv.namespaces.values.get(
 		process.env.CLOUDFLARE_NAMESPACE_ID!,
 		key,
-		{
-			account_id: process.env.CLOUDFLARE_ACCOUNT_ID!
-		}
+		{ account_id: process.env.CLOUDFLARE_ACCOUNT_ID! }
 	)
 	if (!response.ok) {
 		throw new Error(
@@ -60,7 +58,6 @@ export async function update(
 		typeof v
 	)
 	console.log(v)
-	return //prevent further corruption
 	if (typeof stringifiableData == "string")
 		throw new Error("string sent to update function")
 	if (!!stringifiableData.value)
